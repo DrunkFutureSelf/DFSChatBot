@@ -17,27 +17,6 @@ import entities.Message;
 
 public class TwitchListener extends ListenerAdapter{
 	
-/*	@Override
-	public void onGenericMessage(GenericMessageEvent event) throws Exception {
-		// TODO Auto-generated method stub
-		super.onGenericMessage(event);
-		System.out.println("genericMessage found: "+event.getMessage());
-		Dao database = new Dao();
-		//if (event.getMessage().charAt(0)=='!')
-		if (database.isCommand(event.getMessage()))
-		{
-			String returnMessage = database.chatCommand(event.getMessage(), event.getUser().getNick());
-			if (returnMessage.equals("") ) {
-				event.getChannel().send().message(returnMessage);
-			}
-		}		
-
-	}*/
-	/*@Override
-	public void onJoin(JoinEvent event) throws Exception{
-		super.onJoin(event);
-		event.getChannel().send().message("I'm here");
-	}*/
 	@Override
 	public void onMessage(MessageEvent event) throws Exception {
 		super.onMessage(event);
@@ -112,7 +91,4 @@ public class TwitchListener extends ListenerAdapter{
 			}
 		}
 	}	
-	//@Override
-//		event.getChannel().send().message("well hello there");
-//	}
 }

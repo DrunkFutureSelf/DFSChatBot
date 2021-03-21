@@ -73,9 +73,6 @@ public class Dao {
 	private String chatPrefix;
 
 	public Dao()  {
-		//URL =  = "jdbc:sqlite:"D:/Bots/python/ChatBot/Twitch/bot-database.db";
-
-		//new File(propsFile).createNewFile();
 		Properties props = new Properties();
 		try {
 			InputStream input = new FileInputStream(propsFile);

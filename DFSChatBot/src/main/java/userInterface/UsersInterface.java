@@ -75,7 +75,6 @@ public class UsersInterface extends JPanel{
 		panUserControl.add(btnEditUser);
 		panUserControl.add(btnRemUser);
 		panUserControl.add(btnRefresh);
-//		panUserControl.setBounds(EXIT_ON_CLOSE, ABORT, WIDTH, HEIGHT);
 		setLayout(new FlowLayout());
         add(panMainLayout);
         add(panUserControl);

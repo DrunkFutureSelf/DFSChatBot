@@ -108,13 +108,6 @@ public class ResponseCommandWindow extends JPanel {
 		btnRefresh.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-//				dropListSelection.setModel(new DefaultComboBoxModel<String>(database.getListNames()));
-				/*		
-				 * 			dropListSelection.setModel(new DefaultComboBoxModel<String>(database.getListNames()));
-				 * 			String[] CommandNames =database.getListNames();
-				 * 			panMainLayout.setViewportView(jlstListCommands);
-		}
-*/
 				if (cat==Category.ListItem)
 				{
 					Message Lists[] = null;

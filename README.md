@@ -51,15 +51,14 @@ Types of commands:
      - Create a command called what the list is: this will allow your viewers to pull specific items from that list or a random value if none were
         provided.
 
-An example of the addList feature is for quotes: if you use the command �addlist quote� the bot will create an addquote command to allow your 
-chat/moderation team to add quotes to a list. This would be done with a command like �addquote this guy can't kill me...whelp I just died -DFS
-2021 (probably).� Lets say (to continue the example) that chat has captured 4 quotes; they would be able to use �quote 2� to pull the second 
-quote on the list or�quote� (note the lack of number on this one) to pull a random quote from the list.
+An example of the addList feature is for quotes: if you use the command "addlist quote" the bot will create an addquote command to allow your 
+chat/moderation team to add quotes to a list. This would be done with a command like "addquote this guy can't kill me...whelp I just died -DFS
+2021 (probably)." Lets say (to continue the example) that chat has captured 4 quotes; they would be able to use "quote 2" to pull quote number 2 
+on the list or "quote" (note the lack of number on this one) to pull a random quote from the list.
 
 # Examples
 ----------
-Here are some of my real life examples.  In this section I will be using Exclamation Points (!)
-as my prefix.
+Here are some of my real life examples.  In this section I will be using Exclamation Point (!) as my prefix.
 
 For Basic Responses:
   me: !addcom cat I'm a kitty cat
@@ -68,7 +67,7 @@ For Basic Responses:
   bot: I'm a kitty cat
   me: !editcom cat I'm a kitty cat, and I dance
   bot: Command Edited
-  me !cat
+  me: !cat
   bot: I'm a kitty cat, and I dance
 
 For Counters (here we can use the pound (#) symbol to replace a number with):

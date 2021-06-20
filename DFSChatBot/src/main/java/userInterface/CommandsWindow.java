@@ -1,22 +1,9 @@
 package userInterface;
 
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 
-import database.Dao;
 import entities.Category;
-import entities.User;
 
 public class CommandsWindow extends JPanel{
 	private static final long serialVersionUID = -8854608908956611894L;

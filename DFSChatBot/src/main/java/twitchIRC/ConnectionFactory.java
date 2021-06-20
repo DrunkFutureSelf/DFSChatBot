@@ -10,19 +10,22 @@ import org.pircbotx.Configuration.Builder;
 import org.pircbotx.PircBotX;
 import org.pircbotx.cap.EnableCapHandler;
 import org.pircbotx.exception.IrcException;
-import database.Dao;
-import entities.Access;
-import entities.Category;
-import twitchIRC.TwitchListener;
-import userInterface.ConfigurationWindow;
+import userInterface.StreamUI;
 
 public class ConnectionFactory  extends Thread{
 	private PircBotX cf;
+	private StreamUI streamUI;
+	private TwitchListener tl;
+	
+	public ConnectionFactory(StreamUI ui) {
+		streamUI=ui;
+		tl=new TwitchListener(streamUI);
+	}	
 
 
 	public ConnectionFactory() {
-		
-		// TODO Auto-generated constructor stub
+		streamUI=new StreamUI();
+		tl = new TwitchListener();
 	}
 	
 	public void run()  {
@@ -40,13 +43,12 @@ public class ConnectionFactory  extends Thread{
 					.addCapHandler(new EnableCapHandler("twitch.tv/membership"))
 					.setName(props.getProperty("userName"))
 					.setServerPassword(props.getProperty("oauth"))
-					.addListener(new TwitchListener())
+					.addListener(tl)
 					.addAutoJoinChannel("#"+props.getProperty("channelToJoin").replace("#", ""))
 					.buildConfiguration();
-			
 					
 				cf = new PircBotX(config);
-				cf.startBot();
+		 		cf.startBot();
 
 		} catch (IOException | IrcException e) {
 			// TODO Auto-generated catch block
@@ -58,6 +60,14 @@ public class ConnectionFactory  extends Thread{
 	public void stopBot() {
 		cf.stopBotReconnect();
 		cf.close();
+	}
+
+	public StreamUI getStreamUI() {
+		return streamUI;
+	}
+
+	public void setStreamUI(StreamUI streamUI) {
+		this.streamUI = streamUI;
 	}
 
 

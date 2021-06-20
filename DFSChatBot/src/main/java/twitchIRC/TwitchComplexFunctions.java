@@ -35,7 +35,6 @@ public class TwitchComplexFunctions {
 
 	}
 	public String callMethod(String messageCommand, String command, MessageEvent event){
-		System.out.print("Calculating which to use for '"+ command+"'");
 		if (command.equals("addCommand")) 
 			return addCom(messageCommand, event);
 		if (command.equals("editCommand"))
@@ -83,14 +82,13 @@ public class TwitchComplexFunctions {
 		//	|
 		//	->!quote
 		String returnMessage= "";
-		System.out.println("adding new List Command: "+event.getMessage());
 		Dao database = new Dao();
 		String origMsg = event.getMessage().substring(0,event.getMessage().indexOf(' '));
 
 		String msg = event.getMessage().substring(event.getMessage().indexOf(" ")+1).replace("--","-").replace("/*", "*").replace("*/", "*").trim();
 		String command = msg.indexOf(" ")==-1?msg: msg.substring(0, msg.indexOf(" ")).trim();
 		String message = msg.indexOf(" ")==-1? msg:msg.substring(msg.indexOf(" ")).trim();
-		System.out.println("command: "+command+"\tmessage:"+message);
+		
 		if (msg.contains("-?") || msg.contains("-options") || msg.contains("-usage")|| command.equals(""))
 		{
 			returnMessage="-usage: "+prefix+messageCommand+" list_name <response text>";
@@ -119,7 +117,7 @@ public class TwitchComplexFunctions {
 		String msg = event.getMessage().substring(event.getMessage().indexOf(" ")+1).replace("--","-").replace("/*", "*").replace("*/", "*").trim();
 		String command = msg.substring(0, msg.indexOf(" ")).trim();
 		String message = msg.substring(msg.indexOf(" ")).trim();
-		System.out.println("command: "+command+"\tmessage");
+		
 		if (msg.contains("-?") || msg.contains("-options") || msg.contains("-usage")|| command.equals(""))
 		{
 			returnMessage= ("-usage: "+prefix+"editcom command_name new response text");

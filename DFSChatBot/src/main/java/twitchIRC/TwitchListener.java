@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Properties;
 
+import javax.swing.JPanel;
+
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.MessageEvent;
 
@@ -14,9 +16,20 @@ import database.Dao;
 import entities.Access;
 import entities.ListMessage;
 import entities.Message;
+import entities.StreamUIElement;
+import userInterface.StreamUI;
 
 public class TwitchListener extends ListenerAdapter{
+	private JPanel CommandUsage;
+	private StreamUI streamView;
 	
+	public TwitchListener(StreamUI view) {
+		streamView=view;
+	}
+
+	public TwitchListener() {
+		streamView=new StreamUI();
+	}	
 	@Override
 	public void onMessage(MessageEvent event) throws Exception {
 		super.onMessage(event);
@@ -51,7 +64,14 @@ public class TwitchListener extends ListenerAdapter{
 						case Counter:
 							if(returnMessage != null && !returnMessage.getText().equals("")) {
 								database.increaseCounter(event.getMessage());
-								event.getChannel().send().message(returnMessage.getText().replace("#", ""+database.getCounterValue(event.getMessage())));
+								int replacement = database.getCounterValue(event.getMessage());
+								event.getChannel().send().message(returnMessage.getText().replace("#", ""+replacement));
+								if (streamView.isWatched(commandname)){
+									for (StreamUIElement e : streamView.getItemsByCommand(commandname)) {
+										e.setDisplayValue(""+replacement);
+									}
+									streamView.refreshPage();
+								}
 							}
 							break;
 						case List:
@@ -77,6 +97,16 @@ public class TwitchListener extends ListenerAdapter{
 						case Command:
 							TwitchComplexFunctions tcf = new TwitchComplexFunctions();
 							String newMsg = tcf.callMethod(commandname,database.getComplexFunction(commandname), event);
+							String msg = event.getMessage().substring(event.getMessage().indexOf(" ")+1).replace("--","-").replace("/*", "*").replace("*/", "*").trim();
+							String originalCommand = msg.substring(0, msg.indexOf(" ")).trim();
+							String newMessage = msg.substring(msg.indexOf(" ")).trim();
+
+							if (streamView.isWatched(originalCommand)){
+								for (StreamUIElement e : streamView.getItemsByCommand(originalCommand)) {
+									e.setDisplayValue(""+newMessage);
+								}
+								streamView.refreshPage();
+							}
 							if (!newMsg.equals(""))
 								event.getChannel().send().message(newMsg);
 							break;
@@ -90,5 +120,25 @@ public class TwitchListener extends ListenerAdapter{
 				}
 			}
 		}
+	}
+
+
+	public JPanel getCommandUsage() {
+		return CommandUsage;
+	}
+
+
+	public void setCommandUsage(JPanel commandUsage) {
+		CommandUsage = commandUsage;
+	}
+
+
+	public StreamUI getStreamView() {
+		return streamView;
+	}
+
+
+	public void setStreamView(StreamUI streamView) {
+		this.streamView = streamView;
 	}	
 }

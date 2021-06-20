@@ -1,42 +1,29 @@
 package userInterface;
 
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
 
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.pircbotx.Configuration;
-import org.pircbotx.PircBotX;
-import org.pircbotx.Configuration.Builder;
-import org.pircbotx.cap.EnableCapHandler;
-import org.pircbotx.exception.IrcException;
-
 import database.Dao;
-import entities.User;
 import twitchIRC.ConnectionFactory;
-import twitchIRC.TwitchListener;
 
 public class GraphicalInterface extends JFrame{
 
 	private static final long serialVersionUID = 5681214557742053017L;
 	ConnectionFactory cf;
 	JPanel mainDisplay;
+	StreamUI streamWindow;
 	public GraphicalInterface()
 	{
 		super("DFS Chatbot");
@@ -53,7 +40,9 @@ public class GraphicalInterface extends JFrame{
 		JMenuItem oauthHelp = new JMenuItem("OAuth");
 		JMenuItem databaseHelp = new JMenuItem("Database");
 
-		
+		JMenu jmView = new JMenu("View");
+		JMenuItem jmiStreamView = new JMenuItem("Streamer View");
+		JMenuItem jmiStreamViewDesign = new JMenuItem("Streamer View Design");
 		JMenu help = new JMenu("Help");
 		JMenuItem menuReadMe = new JMenuItem("Read Me");
 		JMenuItem about = new JMenuItem("About");
@@ -62,14 +51,12 @@ public class GraphicalInterface extends JFrame{
 		
 		mainDisplay = new JPanel();
 		
-		
-
-
 		about.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(null,"DFS ChatBot Version 1.0");
+				Dao database = new Dao(); 
+				JOptionPane.showMessageDialog(null,"DFS ChatBot Version "+database.getLatestVersion());
 			}
 		});
 		
@@ -95,7 +82,9 @@ public class GraphicalInterface extends JFrame{
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				cf = new ConnectionFactory();	
+				if (streamWindow==null) 
+					streamWindow = new StreamUI();
+				cf = new ConnectionFactory(streamWindow);
 				cf.start();
 			}});
 		
@@ -139,6 +128,24 @@ public class GraphicalInterface extends JFrame{
 		        setVisible(true);
 
 			}});
+		jmiStreamView.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (streamWindow == null) {
+					streamWindow = new StreamUI();
+				}
+				streamWindow.showPage();
+			}
+		});
+		
+		jmiStreamViewDesign.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				jmiStreamViewDesign.setEnabled(true);
+				new StreamUIDesigner();
+			}
+		});
+		
 		menuReadMe.addActionListener(new ActionListener() {
 
 			@Override
@@ -157,7 +164,7 @@ public class GraphicalInterface extends JFrame{
 		public void actionPerformed(ActionEvent e) {
 			JOptionPane.showMessageDialog(null,"This bot runs on SQLite select a location on your harddrive and this program will create everything you will need.");
 		}});
-
+        
 		
 		file.add(menuConfig);
 		file.add(editUsers);
@@ -168,12 +175,16 @@ public class GraphicalInterface extends JFrame{
 		file.addSeparator();
 		file.add(menuClose);
 		
+		jmView.add(jmiStreamView);		
+		jmView.add(jmiStreamViewDesign);
+		
 		help.add(menuReadMe);
         help.add(oauthHelp);
         help.add(databaseHelp);
 		help.add(about);
 		
 		bar.add(file);
+		bar.add(jmView);
 		bar.add(help);
 		InputStream input;
 		String propsFile = "./bot.properties";
@@ -182,6 +193,11 @@ public class GraphicalInterface extends JFrame{
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		try{
+			Dao database = new Dao();
+			if (database.getAllUIProfileNames().size()==0) {
+				jmiStreamView.setEnabled(false);
+			}
+
 			input= new FileInputStream(propsFile);
 			
 	        setSize(360,195);
@@ -202,9 +218,5 @@ public class GraphicalInterface extends JFrame{
 				e1.printStackTrace();
 			}
 		}
-
-		
-
-
 	}
 }

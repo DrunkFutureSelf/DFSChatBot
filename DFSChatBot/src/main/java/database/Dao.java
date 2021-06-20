@@ -1,5 +1,7 @@
 package database;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -11,7 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -20,6 +21,8 @@ import entities.Category;
 import entities.FullMessage;
 import entities.ListMessage;
 import entities.Message;
+import entities.StreamUIElement;
+import entities.StreamUIProfile;
 import entities.User;
 
 public class Dao {
@@ -42,7 +45,8 @@ public class Dao {
 	private final String getListFromCommand ="SELECT Lists.Name, Lists.Ordinal, Lists.Message, Commands.AccessLevel FROM Lists JOIN Commands ON Lists.Name = Commands.Name WHERE Lists.Name = ? ORDER BY Lists.Ordinal";
 	private final String getListNames= "SELECT DISTINCT Commands.Name FROM Commands where Commands.Category = \"List\";";
 	private final String addListItem ="INSERT INTO Lists(Message, Name, Ordinal) VALUES(?,?,?);";
-	private final String getListCount ="SELECT COUNT(*) FROM Lists WHERE Lists.Name = ?;";
+	private final String getListCount = "SELECT COUNT(*) FROM Lists WHERE Lists.Name = ?;";
+	private final String getCommands = "SELECT DISTINCT Commands.Name FROM Commands ORDER BY Commands.Name;";
 	private final String updateListItem = "UPDATE Lists SET Message = ?, Name = ?, Ordinal = ? WHERE Lists.Name = ? AND Lists.Ordinal =?;";
 	private final String checkOrdinal = "Select * FROM Lists WHERE Lists.Name = ? AND Ordinal = ?;";
 	private final String addListCommand = "INSERT INTO ComplexFunctions(Command, Function) VALUES(?,?);";
@@ -52,8 +56,11 @@ public class Dao {
 	private final String setupCommands ="CREATE TABLE Commands (Name PRIMARY KEY UNIQUE NOT NULL, Message STRING, AccessLevel REFERENCES Access (Description),Category REFERENCES Categories (Description) );";
 	private final String setupComplexFunctions="CREATE TABLE ComplexFunctions (Command  STRING PRIMARY KEY UNIQUE, Function NOT NULL);";
 	private final String setupCounters = "CREATE TABLE Counters (Name  STRING  NOT NULL REFERENCES Commands (Name) UNIQUE, Value INTEGER);";
-	private final String setupLists = "CREATE TABLE Lists (Name    STRING REFERENCES Commands (Name) NOT NULL, Ordinal INT    NOT NULL, Message STRING NOT NULL);";
+	private final String setupLists = "CREATE TABLE Lists (Name STRING REFERENCES Commands (Name) NOT NULL, Ordinal INT    NOT NULL, Message STRING NOT NULL);";
 	private final String setupUsers = "CREATE TABLE Users (ID INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE, AccessLevel REFERENCES Access (Description), Name CHAR NOT NULL);";
+	private final String setupUIElements= "CREATE TABLE UIElements ( Name STRING, Text STRING, Profile STRING REFERENCES UIProfile (Name), Command CHAR REFERENCES Commands (Name), Icon STRING, FontFamily STRING, FontStyle INTEGER, FontSize INTEGER, Active INTEGER, XPosition INTEGER, YPosition INTEGER, ZPosition INTEGER, TextColor INTEGER, BackgroundColor INTEGER);";
+	private final String setupUIProfile = "CREATE TABLE UIProfile (Name STRING PRIMARY KEY NOT NULL UNIQUE, Height INTEGER NOT NULL, Width INTEGER NOT NULL, Background INTEGER);";
+	private final String setupGeneralTable = "CREATE TABLE General (Keys  STRING, Value STRING);";
 	
 	private final String setupAccessDefaults = "INSERT INTO Access (Description) VALUES (\"Creator\"),(\"Mod\"),(\"VIP\"),(\"General\")";
 	private final String setupCategoryDefaults = "INSERT INTO Categories (Description) VALUES(\"List\"),(\"Response\"),(\"Command\"),(\"Counter\")";
@@ -65,7 +72,19 @@ public class Dao {
 	private final String deleteListItem = "DELETE FROM Lists where Ordinal = ? and Name = ?";
 	private final String updateUser = "UPDATE Users SET AccessLevel = ?,  Name = ? WHERE Name = ?;";
 	
+	private final String selectUIElement ="SELECT * FROM UIElements WHERE ID = ?;";
+	private final String selectAllUIElementsByProfile = "SELECT UIElements.*,Commands.Name as MessageName,message,accessLevel,Category,Value FROM UIElements JOIN Commands on Commands.Name = UIElements.Command JOIN Counters ON UIElements.Command = Counters.Name WHERE Profile = ?;";
+	private final String addUIElement = "INSERT INTO UIElements (Name, Text , Profile, Command, Icon, FontFamily, FontStyle, FontSize, Active, XPosition, YPosition, ZPosition, TextColor, BackgroundColor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+	private final String removeUIElementByProfile ="Delete from UIElements where Profile = ?";
+	private final String selectAllProfileNames = "SELECT Name from UIProfile;";
+	private final String selectAllProfiles = "SELECT * from UIProfile;";
+	private final String addUIProfile = "INSERT INTO UIProfile (Name, Height, Width, Background) VALUES (?,?,?,?);";
+	
+		
 	private final String getCommandsByCategory = "SELECT Commands.Name as CommandName, Commands.Message as CommandMessage, AccessLevel, Category, c.Value as value, cf.Function as Function FROM Commands LEFT JOIN Counters as c on c.Name = Commands.Name LEFT JOIN ComplexFunctions as cf on cf.Command = Commands.Name Where Commands.Category = ? ORDER BY Commands.Name";
+	private final String updateVersionNumber = "UPDATE General SET value = ? where keys = \"Version\";";
+	private final String addVersionNumber = "INSERT INTO General (keys) VALUES(\"Version\");";
+	private final String getVersionNumber = "Select value FROM General where keys = \"Version\";";
 	
 	private String URL;
 	private String propsFile = "./bot.properties";
@@ -87,8 +106,6 @@ public class Dao {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-
-
 	}
 	
 	public boolean deleteListItem(int ordinal, String message ) {
@@ -231,6 +248,31 @@ public class Dao {
 		return returnVal;
 		
 	}
+	public String [] getCommands() {
+		//	private final String getCommands = "SELECT DISTINCT Commands.Name FROM Commands;";
+		String[] returnStrings = null;
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(getCommands);
+			Vector<String> listNames= new Vector<String>(1);
+			
+			while(rs.next())
+			{
+				listNames.add(rs.getString("Name"));
+			}
+			rs.close();
+			stmt.close();
+			conn.close();
+			returnStrings = listNames.toArray(new String[listNames.size()]);
+			
+			
+		} catch(SQLException e) {
+			e.printStackTrace();
+		}
+		return returnStrings;
+
+	}
 	public String[] getListNames()
 	{
 		String[] returnStrings = null;
@@ -247,7 +289,6 @@ public class Dao {
 			rs.close();
 			stmt.close();
 			conn.close();
-			System.out.println("returning "+listNames.size());
 			returnStrings = listNames.toArray(new String[listNames.size()]);
 			
 			
@@ -491,7 +532,7 @@ public class Dao {
 				conn.close();
 				returnvalue = true;
 			} catch (SQLException e) {
-				System.out.println("Add Counter ERROR:" + e.getMessage());
+				e.printStackTrace();
 			}
 		}
 		return returnvalue;
@@ -513,7 +554,7 @@ public class Dao {
 			conn.close();
 			returnValue = true;
 		} catch (SQLException e) {
-			System.out.println("Add Command ERROR:" + e.getMessage());
+			e.printStackTrace();
 		}
 		return returnValue;
 	}
@@ -554,7 +595,7 @@ public class Dao {
 			returnValue = true;
 
 		} catch (SQLException e) {
-			System.out.println("Edit Command ERROR:" + e.getMessage());
+			e.printStackTrace();
 		}
 		return returnValue;
 	}
@@ -714,7 +755,283 @@ public class Dao {
 		}
 		return returnValue;
 	}
+	public Vector<StreamUIProfile> getAllUIProfiles(){
+		Vector<StreamUIProfile> returnList = new Vector<StreamUIProfile>();
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			PreparedStatement ps = conn.prepareStatement(selectAllProfiles);
+			ResultSet rs = ps.executeQuery();
+			if (rs.getFetchSize() > -1) {
+				while(rs.next()) {
+					StreamUIProfile prof = new StreamUIProfile();
+					prof.setBackGroundColor(new Color(rs.getInt("Background")));
+					prof.setHeight(rs.getInt("Height"));
+					prof.setName(rs.getString("Name"));
+					prof.setWidth(rs.getInt("Width"));
+					returnList.add(prof);
+				}
+			}
+			rs.close();
+			ps.close();
+			conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return returnList;
+	}
+	public Vector<String> getAllUIProfileNames()	{
+		//	private final String selectAllProfiles = "SELECT Name from UIProfile;";
+		Vector<String> returnList = new Vector<String>();
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			PreparedStatement ps = conn.prepareStatement(selectAllProfileNames);
+			ResultSet rs = ps.executeQuery();
+			if (rs.getFetchSize() > -1) {
+				while(rs.next()) {
+					returnList.add(rs.getString("Name"));
+				}
+			}
+			rs.close();
+			ps.close();
+			conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return returnList;
+	}
+	public boolean addUIProfile(String name, int height, int width, int background) {
+		//private final String addUIProfile = "INSERT INTO UIProfile (Name, Height, Width, Background) VALUES (?,?,?,?);";
+		boolean returnValue= false;
+		
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			PreparedStatement ps = conn.prepareStatement(addUIProfile);
+			ps.setString(1, name);
+			ps.setInt(2,height);
+			ps.setInt(3,width);
+			ps.setInt(4, background);
+			ps.executeUpdate();
+
+			ps.close();
+			conn.close();
+			returnValue = true;
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return returnValue;
+	}
 	
+
+	public StreamUIElement getUIElementByID(String ID) {
+		StreamUIElement item = new StreamUIElement();
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			PreparedStatement ps = conn.prepareStatement(selectUIElement);
+			ps.setString(1, ID);
+			ResultSet rs = ps.executeQuery();
+			if (rs.getFetchSize() > -1) {
+				item.setName(rs.getString("Name"));
+				item.setText(rs.getString("Text"));
+				item.setProfile(rs.getString("Profile"));
+				item.setIcon(rs.getString("Icon"));
+				item.setFont(new Font(rs.getString("FontFamily"),rs.getInt("FontStyle"),rs.getInt("FontSize")));
+				item.setActive((rs.getInt("Active")==1));
+				item.setXPosition(rs.getInt("XPosition"));
+				item.setYPosition(rs.getInt("YPosition"));
+				item.setZPosition(rs.getInt("ZPosition"));
+				item.setTextColor(new Color(rs.getInt("TextColor")));
+				item.setBackgroundColor(new Color(rs.getInt("BackgroundColor")));
+				
+				Message message = new Message();
+				
+				message.setName(rs.getString("MessageName"));
+				message.setText(rs.getString("Message"));
+				message.setCategory(Category.valueOf(Category.class, rs.getString("Category")));
+				message.setAccessLevel(rs.getString("AccessLevel") == null ? Access.General
+						: Access.valueOf(Access.class, rs.getString("AccessLevel")));
+				item.setCommand(message);
+				
+			} 
+			rs.close();
+			ps.close();
+			conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return item;
+	}
+	
+	public StreamUIElement[] getUIElementsByProfile(String profileName) {
+		//private final String selectAllUIElementsByProfile = "SELECT * FROM UIElements JOIN Commands on Commands.Name = UIElements.Command WHERE Profile = ?;";
+
+		Vector<StreamUIElement> list = new Vector<StreamUIElement>();
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			PreparedStatement ps = conn.prepareStatement(selectAllUIElementsByProfile);
+			ps.setString(1, profileName);
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				//Text = ?, Profile = ?, Command = ?, Icon = ?, FontFamily = ?, FontStyle = ?, FontSize = ?, Active = ?, XPosition = ?, YPosition = ?, ZPosition = ? where ID = ?;";
+				StreamUIElement item = new StreamUIElement();
+
+				item.setName(rs.getString("Name"));
+				item.setText(rs.getString("Text"));
+				item.setProfile(rs.getString("Profile"));
+				item.setIcon(rs.getString("Icon"));
+				item.setFont(new Font(rs.getString("FontFamily"),rs.getInt("FontStyle"),rs.getInt("FontSize")));
+				item.setActive((rs.getInt("Active")==1));
+				item.setXPosition(rs.getInt("XPosition"));
+				item.setYPosition(rs.getInt("YPosition"));
+				item.setZPosition(rs.getInt("ZPosition"));
+				item.setTextColor(new Color(rs.getInt("TextColor")));
+				item.setBackgroundColor(new Color(rs.getInt("BackgroundColor")));
+				
+				Message message = new Message();
+				
+				message.setName(rs.getString("MessageName"));
+				message.setText(rs.getString("Message"));
+				message.setCategory(Category.valueOf(Category.class, rs.getString("Category")));
+				message.setAccessLevel(rs.getString("AccessLevel") == null ? Access.General
+						: Access.valueOf(Access.class, rs.getString("AccessLevel")));
+				item.setCommand(message);
+				item.setDisplayValue(""+rs.getInt("Value"));
+				list.add(item);
+			}
+			rs.close();
+			ps.close();
+			conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return list.toArray(new StreamUIElement[list.size()]);
+	}
+
+	
+
+	public boolean removeAllUIElementsByProfile(String prof){
+		//	private final String removeUIElementByProfile ="Delete from UIElements where Profile = ?";
+		boolean returnValue=false;
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			PreparedStatement ps = conn.prepareStatement(removeUIElementByProfile);
+			ps.setString(1, prof);
+			ps.executeUpdate();
+			ps.close();
+			conn.close();
+			returnValue=true;
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return returnValue;
+	}
+	public boolean addUIElement(StreamUIElement item) {
+//		private final String addUIElement = "INSERT INTO UIElements (Name, Text , Profile, Command, Icon, FontFamily, FontStyle, FontSize, Active, XPosition, YPosition, ZPosition, TextColor, BackgroundColor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+		boolean returnValue = false;
+		
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			PreparedStatement ps = conn.prepareStatement(addUIElement);
+			ps.setString(1, item.getName());
+			ps.setString(2, item.getText());
+			ps.setString(3, item.getProfile());
+			ps.setString(4, item.getCommand().getName());
+			ps.setString(5, item.getIcon());
+			ps.setString(6, item.getFont().getFamily());
+			ps.setInt(7, item.getFont().getStyle());
+			ps.setInt(8, item.getFont().getSize());
+			ps.setInt(9,(item.isActive()==true)?1:0);
+			ps.setInt(10, item.getXPosition());
+			ps.setInt(11, item.getYPosition());
+			ps.setInt(12, item.getZPosition());
+			ps.setInt(13, item.getTextColor().getRGB());
+			ps.setInt(14, item.getBackgroundColor().getRGB());
+			ps.executeUpdate();
+			ps.close();
+			conn.close();
+			returnValue= true;
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return returnValue;
+	}
+	public void convertFromBeta002() {
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			conn.prepareStatement(setupUIElements).executeUpdate();
+			conn.prepareStatement(setupUIProfile).executeUpdate();
+			conn.prepareStatement(setupGeneralTable).executeUpdate();
+			conn.prepareStatement(addVersionNumber).executeUpdate();
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public boolean updateVersionNumber(String VersionNumber) {
+		//	private final String updateVersionNumber = "UPDATE General SET Version = ?;";
+		boolean returnValue = false;
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			PreparedStatement ps = conn.prepareStatement(updateVersionNumber);
+		
+			ps.setString(1, VersionNumber);
+			ps.executeUpdate();
+			ps.close();
+			conn.close();
+			returnValue= true;
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return returnValue;
+	}
+	
+	public String getVersionNumber() {
+		//	private final String getVersionNumber = "Select Version from General;";
+		String returnValue="none";
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			PreparedStatement pstmt = conn.prepareStatement(getVersionNumber);
+			ResultSet rs = pstmt.executeQuery();
+			if (rs.getFetchSize() > -1) {
+				returnValue = rs.getString("Value");
+			}
+			rs.close();
+			pstmt.close();
+			conn.close();
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return returnValue;
+	}
+	
+	public String getLatestVersion() {
+		return ""+getClass().getPackage().getImplementationVersion();
+	}
+	public void performConvert() {
+		switch(getVersionNumber()) {
+			case "0.0.2":
+			case "none":
+				convertFromBeta002();
+				updateVersionNumber(getLatestVersion());
+		}
+	}
+
 	public void setupDatabase() {
 		try {
 			String setupBasicCommands = "INSERT INTO Commands (Name, Message, AccessLevel, Category) VALUES(\""+chatPrefix+"addcom\",\"Command Added\", \"Mod\",\"Command\"),(\""+chatPrefix+"addlist\",\"List Added\",\"Mod\",\"Command\"),(\""+chatPrefix+"editcom\",\"Command Edited\",\"Mod\",\"Command\"),(\""+chatPrefix+"addcounter\",\"Counter Added\",\"Mod\",\"Command\");";
@@ -728,14 +1045,21 @@ public class Dao {
 			conn.prepareStatement(setupCounters).executeUpdate();
 			conn.prepareStatement(setupLists).executeUpdate();
 			conn.prepareStatement(setupUsers).executeUpdate();
-			
+			conn.prepareStatement(setupUIElements).executeUpdate();
+			conn.prepareStatement(setupUIProfile).executeUpdate();
+			conn.prepareStatement(setupGeneralTable).executeUpdate();
+
 			conn.prepareStatement(setupAccessDefaults).executeUpdate();
 			conn.prepareStatement(setupCategoryDefaults).executeUpdate();
 			conn.prepareStatement(setupComplexDefaults).executeUpdate();
+			conn.prepareStatement(addVersionNumber).executeUpdate();
+
 			conn.close();
 			
 			conn = DriverManager.getConnection(URL);
 			conn.prepareStatement(setupBasicCommands).executeUpdate();
+			updateVersionNumber(getLatestVersion());
+
 			Properties props = new Properties();
 			InputStream input = new FileInputStream(propsFile);
 			props.load(input);

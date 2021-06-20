@@ -54,6 +54,8 @@ chat/moderation team to add quotes to a list. This would be done with a command 
 2021 (probably).” Lets say (to continue the example) that chat has captured 4 quotes; they would be able to use “quote 2” to pull the second 
 quote on the list or”quote” (note the lack of number on this one) to pull a random quote from the list.
 
+As of version 1.0.0 this application also supports a GUI to display your counters on screen.  This can be captured with OBS/SLOBS to be included in a live stream.  
+
 # Examples
 ----------
 Here are some of my real life examples.  In this section I will be using Exclamation Points (!)

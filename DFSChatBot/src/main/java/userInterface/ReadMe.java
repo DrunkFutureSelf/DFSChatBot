@@ -25,8 +25,7 @@ public class ReadMe extends JFrame{
 			
 			txtMain.read(input, input);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			System.out.println("oops");
+
 			e.printStackTrace();
 		}
 		JScrollPane scroll = new JScrollPane(txtMain);

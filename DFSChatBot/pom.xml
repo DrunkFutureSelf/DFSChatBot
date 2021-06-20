@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>DrunkFutureSelf</groupId>
   <artifactId>DFSChatBot</artifactId>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>1.0.0</version>
   <build>
 	<resources>
 		<resource>
@@ -16,6 +16,9 @@
 	  <configuration>
 	    <archive>
 	      <manifest>
+	      	<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+	      
 	      	<addClasspath>true</addClasspath>
             <classpathPrefix>lib/</classpathPrefix>
 	        <mainClass>bootStrap</mainClass>
@@ -48,6 +51,12 @@
 		</repository>
 	</repositories>
   <dependencies>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-model</artifactId>
+      <version>3.3.9</version>
+    </dependency>
+  
     <dependency>
   	  <groupId>org.slf4j</groupId>
 	  <artifactId>slf4j-api</artifactId>

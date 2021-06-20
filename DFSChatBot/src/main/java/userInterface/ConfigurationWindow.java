@@ -132,8 +132,11 @@ public class ConfigurationWindow extends JPanel{
 		        		database.setupDatabase();
 		        		JOptionPane.showMessageDialog(null,"Database has been setup");
 		        	}
-		        	else 
+		        	else {
+		    			if (!database.getVersionNumber().equals(database.getLatestVersion())) 
+		    				database.performConvert();
 		        		JOptionPane.showMessageDialog(null,"Database has been found and is ready to be used");
+		        	}
 
 
 				} catch (FileNotFoundException e1) {

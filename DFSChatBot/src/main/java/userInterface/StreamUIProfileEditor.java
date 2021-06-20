@@ -100,9 +100,9 @@ public class StreamUIProfileEditor extends JDialog implements ActionListener{
 	}
 	public void actionPerformed(ActionEvent event) {
 		if(event.getSource()==jbtnOkay) {
-			if (jtfName.getText().isBlank()||
-					jtfHeight.getText().isBlank()||
-					jtfWidth.getText().isBlank() ||
+			if (jtfName.getText().equals("")||
+					jtfHeight.getText().equals("")||
+					jtfWidth.getText().equals("") ||
 					Integer.parseInt(jtfHeight.getText()) == 0 ||
 					Integer.parseInt(jtfWidth.getText()) == 0)
 			{

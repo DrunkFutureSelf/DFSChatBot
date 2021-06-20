@@ -117,10 +117,10 @@ public class ConfigurationWindow extends JPanel{
 					InputStream input = new FileInputStream(propsFile);
 
 					props.load(input);
-					props.setProperty("userName",inputUsr.getText());
+					props.setProperty("userName",inputUsr.getText().toLowerCase());
 					props.setProperty("oauth", "oauth:" +new String(inputOauth.getPassword()).replace("oauth:", ""));
 					props.setProperty("database",inputDatabase.getText());
-					props.setProperty("channelToJoin", inputChat.getText());
+					props.setProperty("channelToJoin", inputChat.getText().toLowerCase());
 					props.setProperty("prefix", inputPrefix.getText());
 					
 					input.close();
@@ -138,12 +138,9 @@ public class ConfigurationWindow extends JPanel{
 		        		JOptionPane.showMessageDialog(null,"Database has been found and is ready to be used");
 		        	}
 
-
 				} catch (FileNotFoundException e1) {
-					//e1.printStackTrace();
 					System.err.println("your workign directory must be where the jar file is :( can't figure this one out");
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 

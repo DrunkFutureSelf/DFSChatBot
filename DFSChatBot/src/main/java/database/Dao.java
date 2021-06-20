@@ -79,7 +79,7 @@ public class Dao {
 	private final String selectAllProfileNames = "SELECT Name from UIProfile;";
 	private final String selectAllProfiles = "SELECT * from UIProfile;";
 	private final String addUIProfile = "INSERT INTO UIProfile (Name, Height, Width, Background) VALUES (?,?,?,?);";
-	
+	private final String deleteProfileName= "DELETE from UIProfile where Name = ?;";
 		
 	private final String getCommandsByCategory = "SELECT Commands.Name as CommandName, Commands.Message as CommandMessage, AccessLevel, Category, c.Value as value, cf.Function as Function FROM Commands LEFT JOIN Counters as c on c.Name = Commands.Name LEFT JOIN ComplexFunctions as cf on cf.Command = Commands.Name Where Commands.Category = ? ORDER BY Commands.Name";
 	private final String updateVersionNumber = "UPDATE General SET value = ? where keys = \"Version\";";
@@ -100,10 +100,8 @@ public class Dao {
 			URL = "jdbc:sqlite:"+props.getProperty("database");
 			chatPrefix = props.getProperty("prefix");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	}
@@ -141,8 +139,6 @@ public class Dao {
 				String message = rs.getString("CommandMessage");
 				Access level = Access.valueOf(Access.class, rs.getString("AccessLevel"));
 				int value = rs.getInt("value");
-				//int ordinal = rs.getInt("Ordinal");
-				//String listMessage = rs.getString("ListMessage");
 				String function = rs.getString("Function");
 	
 				FullMessage fm = new FullMessage(commandName,message,level,category,value,0,null,function);
@@ -179,7 +175,6 @@ public class Dao {
 			return users.toArray(new User[users.size()]);
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -198,7 +193,6 @@ public class Dao {
 			returnValue = true;
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -312,7 +306,6 @@ public class Dao {
 			}
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -334,7 +327,6 @@ public class Dao {
 			}
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -355,7 +347,6 @@ public class Dao {
 			returnValue = true;
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -379,7 +370,6 @@ public class Dao {
 			returnValue = true;
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -403,7 +393,6 @@ public class Dao {
 			return new User(name, id, accessLevel);
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -619,7 +608,6 @@ public class Dao {
 			pstmt.close();
 			conn.close();
 			}catch (SQLException e) {
-				// TODO: handle exception
 				e.printStackTrace();
 		}
 	}
@@ -640,7 +628,6 @@ public class Dao {
 
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return returnValue;
@@ -661,7 +648,6 @@ public class Dao {
 			pstmt.close();
 			conn.close();
 		} catch (SQLException e) {
-			// TODO: handle exception
 			e.printStackTrace();
 			return -1;
 		}
@@ -684,7 +670,6 @@ public class Dao {
 			conn.close();
 
 		} catch (SQLException e) {
-			// TODO: handle exception
 			e.printStackTrace();
 			return "";
 		}
@@ -775,7 +760,6 @@ public class Dao {
 			ps.close();
 			conn.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return returnList;
@@ -796,7 +780,6 @@ public class Dao {
 			ps.close();
 			conn.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return returnList;
@@ -819,7 +802,6 @@ public class Dao {
 			returnValue = true;
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -861,10 +843,27 @@ public class Dao {
 			ps.close();
 			conn.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return item;
+	}
+	public boolean deleteUIProfile(String profileName) {
+		boolean returnValue = false;
+		
+		Connection conn;
+		try {
+			conn = DriverManager.getConnection(URL);
+			PreparedStatement ps = conn.prepareStatement(deleteProfileName);
+			ps.setString(1, profileName);
+			ps.executeUpdate();
+			ps.close();
+			conn.close();
+			returnValue=true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return returnValue;
 	}
 	
 	public StreamUIElement[] getUIElementsByProfile(String profileName) {
@@ -907,7 +906,6 @@ public class Dao {
 			ps.close();
 			conn.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return list.toArray(new StreamUIElement[list.size()]);
@@ -928,7 +926,6 @@ public class Dao {
 			returnValue=true;
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return returnValue;
@@ -960,7 +957,6 @@ public class Dao {
 			returnValue= true;
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return returnValue;
@@ -992,7 +988,6 @@ public class Dao {
 			returnValue= true;
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return returnValue;
@@ -1013,7 +1008,6 @@ public class Dao {
 			conn.close();
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1025,10 +1019,12 @@ public class Dao {
 	}
 	public void performConvert() {
 		switch(getVersionNumber()) {
-			case "0.0.2":
 			case "none":
+			case "0.0.2":
 				convertFromBeta002();
+			case "1.0.0":
 				updateVersionNumber(getLatestVersion());
+				break;
 		}
 	}
 

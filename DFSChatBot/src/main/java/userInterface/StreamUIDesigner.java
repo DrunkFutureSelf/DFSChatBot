@@ -33,6 +33,7 @@ public class StreamUIDesigner extends JFrame implements ActionListener,MouseList
 	JMenuItem jmiLoad;
 	JMenuItem jmiClose;
 	JMenuItem jmiDelItem;
+	JMenuItem jmiDelProf;
 	private int index;
 	private final int boxSizeX = 85;
 	private final int boxSizeY = 30;
@@ -47,6 +48,7 @@ public class StreamUIDesigner extends JFrame implements ActionListener,MouseList
 		
 		JMenu jmFile = new JMenu("File");
 		jmiNew = new JMenuItem("New Page");
+		jmiDelProf = new JMenuItem("Delete Page");
 		jmiSave = new JMenuItem("Save");
 		jmiLoad = new JMenuItem("Load");
 		jmiClose = new JMenuItem("Close");
@@ -62,6 +64,7 @@ public class StreamUIDesigner extends JFrame implements ActionListener,MouseList
 		jmiSave.addActionListener(this);
 		jmiClose.addActionListener(this);
 		jmiDelItem.addActionListener(this);
+		jmiDelProf.addActionListener(this);
 		
 		canvas = new DrawCanvas();
 		
@@ -73,6 +76,7 @@ public class StreamUIDesigner extends JFrame implements ActionListener,MouseList
 		}
 		
 		jmFile.add(jmiNew);
+		jmFile.add(jmiDelProf);
 		jmFile.add(jmiSave);
 		jmFile.add(jmiLoad);
 		jmFile.add(jmiClose);
@@ -80,7 +84,6 @@ public class StreamUIDesigner extends JFrame implements ActionListener,MouseList
 		jmEdit.add(jmiNewItem);
 		jmEdit.add(jmiDelItem);
 		
-
 		jmb.add(jmFile);
 		jmb.add(jmEdit);
 		
@@ -102,11 +105,6 @@ public class StreamUIDesigner extends JFrame implements ActionListener,MouseList
 	private class DrawCanvas extends JPanel{
 		private static final long serialVersionUID = 4851573556281581186L;
 		private Dimension dimension;
-		private Dimension xhair;
-		
-		public void setXHair(int w, int h) {
-			this.xhair.setSize(w,h);
-		}
 		
 		public void setDimension(int w,int h) {
 			this.dimension.setSize(w, h);
@@ -131,9 +129,7 @@ public class StreamUIDesigner extends JFrame implements ActionListener,MouseList
 			g.setFont(new Font("Segoe UI",Font.BOLD,18));
 			g.drawString("Unused", (int) dimension.getWidth()-85, 20);
 			g.drawRect(0,0,leftEdge,((int)dimension.getHeight()-100));
-			g.drawLine(0, ((int)dimension.getHeight()-99), 10000, ((int)dimension.getHeight()-100));
 
-			g.drawLine(0, 500, 10000, 500);
 
 			if (items.size() >0) {
 				for(StreamUIElement element: items) {
@@ -207,6 +203,16 @@ public class StreamUIDesigner extends JFrame implements ActionListener,MouseList
 			setSize(canvas.getDimenstion());
 			setVisible(true);
 			repaint();
+		}
+		if (e.getSource()==jmiDelProf) {
+			Dao Database = new Dao();
+			Vector<String> profiles = Database.getAllUIProfileNames();
+			String input =((String)JOptionPane.showInputDialog(null,"Delete Profile","",JOptionPane.QUESTION_MESSAGE,null,profiles.toArray(new String[profiles.size()]),""));
+			if (!input.equals("") &&input!=null) {
+				if(Database.deleteUIProfile(input))
+					Database.removeAllUIElementsByProfile(input);
+			}
+
 		}
 		if (e.getSource() == jmiLoad) {
 			Dao Database = new Dao();
@@ -282,13 +288,6 @@ public class StreamUIDesigner extends JFrame implements ActionListener,MouseList
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		canvas.setXHair(e.getY(), e.getX());
-		pack();
-		setTitle("* Stream overlay designer "+ activeProfile.getName() );
-		setSize(canvas.getDimenstion());
-		setVisible(true);
-		repaint();
-
 	}
 
 	@Override

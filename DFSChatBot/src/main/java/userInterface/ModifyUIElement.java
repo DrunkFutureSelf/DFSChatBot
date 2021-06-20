@@ -136,7 +136,7 @@ public class ModifyUIElement extends JDialog implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==jbtnOkay) {
 			Dao database = new Dao();
-			if (jtfName.getText().isBlank()) {
+			if (jtfName.getText().equals("")) {
 				data = null;
 			}
 			else {

@@ -63,8 +63,22 @@ public class TwitchListener extends ListenerAdapter{
 							break;
 						case Counter:
 							if(returnMessage != null && !returnMessage.getText().equals("")) {
-								database.increaseCounter(event.getMessage());
-								int replacement = database.getCounterValue(event.getMessage());
+								String parameters = event.getMessage().replace(commandname,"");
+								int value =0;
+								if (parameters.contains("+") ||parameters.contains("-")) {
+									try {
+										value = Integer.parseInt(parameters.replace("-", "").replace("+", "").replace(" ", ""));
+										}catch(NumberFormatException exc){
+											value = 1;
+										}
+								}
+								if (parameters.contains("+"))
+									database.increaseCounter(commandname,value);
+								if (parameters.contains("-"))
+									database.decreaseCounter(commandname,value);
+								if (parameters.contains("reset")||parameters.contains("clear"))
+									database.resetCounter(commandname);
+								int replacement = database.getCounterValue(commandname);
 								event.getChannel().send().message(returnMessage.getText().replace("#", ""+replacement));
 								if (streamView.isWatched(commandname)){
 									for (StreamUIElement e : streamView.getItemsByCommand(commandname)) {

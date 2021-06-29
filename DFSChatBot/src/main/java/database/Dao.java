@@ -589,13 +589,28 @@ public class Dao {
 		return returnValue;
 	}
 	
-	public void increaseCounter(String command) {
+	public void increaseCounter(String command, int value) {
 		int count = getCounterValue(chatPrefix+command.replace(chatPrefix, ""));
 		
 		if (count != -1) {
-			setCounter(command,count+1);
+			setCounter(command,count+value);
 		}
 	}
+	public void resetCounter(String command) {
+		int count = getCounterValue(chatPrefix+command.replace(chatPrefix, ""));
+		
+		if (count != -1) {
+			setCounter(command,0);
+		}
+	}
+	public void decreaseCounter(String command, int value) {
+		int count = getCounterValue(chatPrefix+command.replace(chatPrefix, ""));
+		
+		if (count != -1) {
+			setCounter(command,count-value);
+		}
+	}
+
 	
 	public void setCounter(String command, int newvalue) {
 		try {
@@ -1023,6 +1038,8 @@ public class Dao {
 			case "0.0.2":
 				convertFromBeta002();
 			case "1.0.0":
+			case "1.0.1":
+			case "1.0.2":
 				updateVersionNumber(getLatestVersion());
 				break;
 		}

@@ -131,14 +131,15 @@ public class StreamUI  extends JFrame implements ActionListener{
 		}
 		@Override
 		public void paintComponent(Graphics g) {
-			super.paintComponent(g);
+			Graphics offScreen = g;
+			super.paintComponent(offScreen);
 			//if (activeProfile.getBackGroundColor()) {
-				g.setColor(activeProfile.getBackGroundColor());
-				g.fillRect(0, 0, activeProfile.getWidth(), activeProfile.getHeight());
+				offScreen.setColor(activeProfile.getBackGroundColor());
+				offScreen.fillRect(0, 0, activeProfile.getWidth(), activeProfile.getHeight());
 //			}
 			for (StreamUIElement element: elements) {
-				g.setFont(element.getFont());
-				FontMetrics fm = g.getFontMetrics(element.getFont());
+				offScreen.setFont(element.getFont());
+				FontMetrics fm = offScreen.getFontMetrics(element.getFont());
 
 				int textoffset = fm.getAscent();
 				int xpos = element.getXPosition();
@@ -146,7 +147,7 @@ public class StreamUI  extends JFrame implements ActionListener{
 					try {
 						BufferedImage img = ImageIO.read(new File(element.getIcon()));
 						if (img != null) {
-							g.drawImage(img, element.getXPosition(), element.getYPosition(), img.getWidth(), img.getHeight(), null );
+							offScreen.drawImage(img, element.getXPosition(), element.getYPosition(), img.getWidth(), img.getHeight(), null );
 							xpos+=img.getWidth()+5;
 							textoffset+=(img.getHeight()-(fm.getAscent()+fm.getDescent()))/2;
 							if (textoffset<0)textoffset=0;
@@ -156,9 +157,10 @@ public class StreamUI  extends JFrame implements ActionListener{
 						e.printStackTrace();
 					}
 				}
-				g.setColor(element.getTextColor());
-				g.drawString(element.getText().replace("#", element.getDisplayValue()), xpos, element.getYPosition()+textoffset);				
+				offScreen.setColor(element.getTextColor());
+				offScreen.drawString(element.getText().replace("#", element.getDisplayValue()), xpos, element.getYPosition()+textoffset);				
 			}
+		g=offScreen;	
 		}
 	}
 }

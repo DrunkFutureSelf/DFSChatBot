@@ -20,6 +20,8 @@ import entities.Category;
 import entities.FullMessage;
 import entities.ListMessage;
 import entities.Message;
+import userInterface.modify.ModifyListItem;
+import userInterface.modify.ModifyResponseCommand;
 
 public class ResponseCommandWindow extends JPanel {
 	private static final long serialVersionUID = 4837937837124252137L;
@@ -166,7 +168,7 @@ public class ResponseCommandWindow extends JPanel {
 		panButtons.add(btnRemCommand);
 		panButtons.add(btnRefresh);
 		setLayout(new FlowLayout());
-        add(panMainLayout);
         add(panButtons);
+        add(panMainLayout);
 	}
 }

@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 
 public class StreamUIElement {
+	private int Id;
 	private String Name;
 	private String Profile;
 	private String Text;
@@ -14,9 +15,13 @@ public class StreamUIElement {
 	private int XPosition;
 	private int YPosition;
 	private int ZPosition;
+	private int Width;
+	private int Height;
 	private Color TextColor;
 	private Color BackgroundColor;
 	private String DisplayValue;
+	private boolean Visible;
+	private int Duration;
 	
 	public String getProfile() {
 		return Profile;
@@ -95,5 +100,35 @@ public class StreamUIElement {
 	}
 	public void setDisplayValue(String displayValue) {
 		DisplayValue = displayValue;
+	}
+	public int getWidth() {
+		return Width;
+	}
+	public void setWidth(int width) {
+		Width = width;
+	}
+	public int getHeight() {
+		return Height;
+	}
+	public void setHeight(int height) {
+		Height = height;
+	}
+	public int getId() {
+		return Id;
+	}
+	public void setId(int id) {
+		Id = id;
+	}
+	public boolean isVisible() {
+		return Visible;
+	}
+	public void setVisible(boolean visible) {
+		Visible = visible;
+	}
+	public int getDuration() {
+		return Duration;
+	}
+	public void setDuration(int duration) {
+		Duration = duration;
 	}
 }

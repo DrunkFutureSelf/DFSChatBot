@@ -49,6 +49,7 @@ public class TwitchListener extends ListenerAdapter{
 		{
 			String commandname = (event.getMessage()).substring(0, (event.getMessage().indexOf(' ') != -1 ? event.getMessage().indexOf(" "):event.getMessage().length())).trim();
 			Dao database = new Dao();
+
 			if (database.isCommand(commandname))
 			{
 				Message returnMessage = database.chatCommand(commandname);
@@ -59,7 +60,7 @@ public class TwitchListener extends ListenerAdapter{
 					switch(returnMessage.getCategory()){
 						case Response:
 							if(returnMessage != null && !returnMessage.getText().equals(""))
-								event.getChannel().send().message(returnMessage.getText());
+								sendMessage(event,returnMessage.getText());
 							break;
 						case Counter:
 							if(returnMessage != null && !returnMessage.getText().equals("")) {
@@ -79,12 +80,12 @@ public class TwitchListener extends ListenerAdapter{
 								if (parameters.contains("reset")||parameters.contains("clear"))
 									database.resetCounter(commandname);
 								int replacement = database.getCounterValue(commandname);
-								event.getChannel().send().message(returnMessage.getText().replace("#", ""+replacement));
+								sendMessage(event,returnMessage.getText().replace("#", ""+replacement));
 								if (streamView.isWatched(commandname)){
 									for (StreamUIElement e : streamView.getItemsByCommand(commandname)) {
 										e.setDisplayValue(""+replacement);
 									}
-									streamView.refreshPage();
+									streamView.checkForAnimation(commandname);
 								}
 							}
 							break;
@@ -93,7 +94,7 @@ public class TwitchListener extends ListenerAdapter{
 							int count = database.getListSize(command);
 							int message = event.getMessage().contains(" ")? Integer.parseInt(event.getMessage().substring(event.getMessage().indexOf(" ")).trim()):-1;
 							if (message>0 && !database.checkListOrdinal(command, message)) {
-								event.getChannel().send().message(command.substring(1)+" "+message+" not found");
+								sendMessage(event,command.substring(1)+" "+message+" not found");
 								break;
 							}
 							ListMessage[] lm = database.getListMessages(command);
@@ -106,23 +107,14 @@ public class TwitchListener extends ListenerAdapter{
 							if (message ==-1)
 								index = (int)(Math.random()*count);
 							//event.getChannel().send().message(command.substring(1)+" ["+(lm[index].getOrdinal())+"]: "+lm[index].getText());
-							event.getChannel().send().message(returnMessage.getText().replace("#", ""+lm[index].getOrdinal())+ " "+lm[index].getText());
+							sendMessage(event,returnMessage.getText().replace("#", ""+lm[index].getOrdinal())+ " "+lm[index].getText());
 							break;
 						case Command:
 							TwitchComplexFunctions tcf = new TwitchComplexFunctions();
 							String newMsg = tcf.callMethod(commandname,database.getComplexFunction(commandname), event);
-							String msg = event.getMessage().substring(event.getMessage().indexOf(" ")+1).replace("--","-").replace("/*", "*").replace("*/", "*").trim();
-							String originalCommand = msg.substring(0, msg.indexOf(" ")).trim();
-							String newMessage = msg.substring(msg.indexOf(" ")).trim();
 
-							if (streamView.isWatched(originalCommand)){
-								for (StreamUIElement e : streamView.getItemsByCommand(originalCommand)) {
-									e.setDisplayValue(""+newMessage);
-								}
-								streamView.refreshPage();
-							}
 							if (!newMsg.equals(""))
-								event.getChannel().send().message(newMsg);
+								sendMessage(event,newMsg);
 							break;
 						default:
 							break;
@@ -130,7 +122,37 @@ public class TwitchListener extends ListenerAdapter{
 				}
 				else
 				{
-					event.getChannel().send().message("Insufficient privilege to run this command");
+					String level="mod";
+					if (returnMessage.getAccessLevel().getRank() ==Access.Creator.getRank())
+							level = Access.Creator.getDescription();
+					if (returnMessage.getAccessLevel().getRank() ==Access.Friend.getRank())
+						level = Access.Friend.getDescription();
+					if (returnMessage.getAccessLevel().getRank() ==Access.General.getRank())
+						level = Access.General.getDescription();
+					if (returnMessage.getAccessLevel().getRank() ==Access.Mod.getRank())
+						level = Access.Mod.getDescription();
+					if (returnMessage.getAccessLevel().getRank() ==Access.VIP.getRank())
+							level = Access.VIP.getDescription();
+					sendMessage(event,"Please ask a "+level +" to run this command");
+				}
+			}
+		}
+	}
+	private void sendMessage(MessageEvent event, String message) {
+		while (message.length() >0) {
+			if (message.length()<=500) {
+				event.getChannel().send().message(message);
+				message ="";
+			}
+			else {
+				String sendmsg = message.substring(0,500);
+				message = message.substring(501);
+				event.getChannel().send().message(message);
+				try {
+					this.wait(500);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		}

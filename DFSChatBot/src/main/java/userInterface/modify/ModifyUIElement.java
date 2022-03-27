@@ -1,16 +1,14 @@
-package userInterface;
+package userInterface.modify;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -18,11 +16,12 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
 
 import database.Dao;
+import entities.Category;
 import entities.StreamUIElement;
-import entities.StreamUIProfile;
 
 public class ModifyUIElement extends JDialog implements ActionListener {
 	private static final long serialVersionUID = -8996371640004260802L;
@@ -43,8 +42,9 @@ public class ModifyUIElement extends JDialog implements ActionListener {
 	private JLabel lblFontColorDisplay;
 	private JLabel lblFontDisplay;
 	private StreamUIElement data;
-	
+	private JCheckBox jcbVisable; 
 	private JFrame callingframe;
+	private JSpinner jsDuration;
 
 	public ModifyUIElement(JFrame frame, StreamUIElement prof) {
 		super(frame, "Create/Modify item",true);
@@ -61,27 +61,35 @@ public class ModifyUIElement extends JDialog implements ActionListener {
 		JLabel lblFontColor = new JLabel("Font Color");
 		JLabel lblBackgroundColor = new JLabel("Background Color");
 		JLabel lblFont = new JLabel("Font");
-		
-		JLabel lblBlank3 = new JLabel("");
+		JLabel lblVisible = new JLabel("Always Visible");
+		JLabel lblSeconds = new JLabel("Display Length");
+		JLabel lblSecondsDisplay = new JLabel("Seconds");
+
+
+
 		lblIconDisplay = new JLabel(""); 
 		lblFontDisplay = new JLabel("");
 		lblFontColorDisplay = new JLabel("");
 		lblBackgroundColorDisplay = new JLabel("");
 		JLabel lblBlank = new JLabel("");
 		JLabel lblBlank2 = new JLabel("");
+		JLabel lblBlank3 = new JLabel("");
+		JLabel lblBlank4 = new JLabel("");
 		
 		jtfName = new JTextField();
 		jtfText = new JTextField();
 		btnIcon = new JButton("Select Icon");
 		btnFont = new JButton("Select Font");
-		jcbDataSource = new JComboBox<String>(database.getCommands());
+		jcbDataSource = new JComboBox<String>(database.getCommands(Category.Counter));
 		btnFontColor = new JButton("Select Color");
 		btnBackgroundColor = new JButton("Select Color");
+		jcbVisable = new JCheckBox("");
+		jsDuration = new JSpinner();
 		
 		jbtnOkay = new JButton("Okay");
 		jbtnCancel= new JButton("Cancel");
 		
-		mainPan.setLayout(new GridLayout(7,3));
+		mainPan.setLayout(new GridLayout(9,3));
 		
 		lblFontColorDisplay.setBackground(Color.BLACK);
 		lblBackgroundColorDisplay.setBackground(Color.BLACK);
@@ -95,6 +103,8 @@ public class ModifyUIElement extends JDialog implements ActionListener {
 		btnBackgroundColor.addActionListener(this);
 		btnFontColor.addActionListener(this);
 		btnIcon.addActionListener(this);
+		jcbVisable.addActionListener(this);
+
 		
 		mainPan.add(lblName);
 		mainPan.add(jtfName);
@@ -116,6 +126,14 @@ public class ModifyUIElement extends JDialog implements ActionListener {
 		mainPan.add(btnFontColor);
 		mainPan.add(lblFontColorDisplay);
 		
+		mainPan.add(lblVisible);
+		mainPan.add(jcbVisable);
+		mainPan.add(lblBlank4);
+		
+		mainPan.add(lblSeconds);
+		mainPan.add(jsDuration);
+		mainPan.add(lblSecondsDisplay);
+		
 		/*
 		 * 		mainPan.add(lblBackgroundColor);
 		 * 		mainPan.add(btnBackgroundColor);
@@ -129,7 +147,7 @@ public class ModifyUIElement extends JDialog implements ActionListener {
 		mainPan.add(jbtnCancel);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		add(mainPan);
-		setSize(500,200);
+		setSize(500,250);
 	}
 
 	@Override
@@ -143,10 +161,14 @@ public class ModifyUIElement extends JDialog implements ActionListener {
 				data.setName(jtfName.getText());
 				data.setText(jtfText.getText());
 				//	data.setIcon();
-				
+				if (data.getFont()==null) {
+					data.setFont(new Font("Helvetica", Font.PLAIN, 18));
+				}
 				data.setBackgroundColor(backGround);
 				data.setTextColor(foreGround);
 				data.setCommand(database.chatCommand(jcbDataSource.getSelectedItem().toString()));
+				data.setVisible(jcbVisable.isSelected());
+				data.setDuration((int)jsDuration.getValue());
 			}
 			dispose();
 		}
@@ -180,6 +202,10 @@ public class ModifyUIElement extends JDialog implements ActionListener {
 		else if (e.getSource() == jbtnCancel ) {
 			data = null;
 			dispose();
+		}
+		else if (e.getSource()== jcbVisable)
+		{
+			jsDuration.setEnabled(!jcbVisable.isSelected());
 		}
 		
 	}

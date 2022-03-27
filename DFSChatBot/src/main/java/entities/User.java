@@ -15,6 +15,12 @@ public class User {
 		this.AccessLevel=AccessLevel;
 	}
 
+	public User() {
+		this.UserName="";
+		this.AccessLevel=AccessLevel.General;
+		this.ID=-1;
+	}
+
 	public String getUserName() {
 		return UserName;
 	}

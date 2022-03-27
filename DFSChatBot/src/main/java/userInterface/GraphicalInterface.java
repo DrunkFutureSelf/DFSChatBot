@@ -124,7 +124,7 @@ public class GraphicalInterface extends JFrame{
 				add(mainDisplay);
 				invalidate();
 
-		        setSize(750,350);
+		        setSize(750,400);
 		        setVisible(true);
 
 			}});

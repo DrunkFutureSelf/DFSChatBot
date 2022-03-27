@@ -1,4 +1,4 @@
-package userInterface;
+package userInterface.modify;
 
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -38,13 +38,13 @@ public class ModifyResponseCommand extends JFrame {
 	private static final long serialVersionUID = 3182870079914400494L;
 	
 
-	ModifyResponseCommand(Category cat) {
+	public ModifyResponseCommand(Category cat) {
 		FullMessage newmsg = new FullMessage();
 		newmsg.setCategory(cat);
 		showScreen(newmsg);
 	}
 
-	ModifyResponseCommand(FullMessage orig) {
+	public ModifyResponseCommand(FullMessage orig) {
 		showScreen(orig);
 	}
 

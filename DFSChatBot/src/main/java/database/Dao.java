@@ -46,9 +46,9 @@ public class Dao {
 	private final String getListNames= "SELECT DISTINCT Commands.Name FROM Commands where Commands.Category = \"List\";";
 	private final String addListItem ="INSERT INTO Lists(Message, Name, Ordinal) VALUES(?,?,?);";
 	private final String getListCount = "SELECT COUNT(*) FROM Lists WHERE Lists.Name = ?;";
-	private final String getCommands = "SELECT DISTINCT Commands.Name FROM Commands ORDER BY Commands.Name;";
+	private final String getCommands = "SELECT DISTINCT Commands.Name, Commands.Category FROM Commands ORDER BY Commands.Name;";
 	private final String updateListItem = "UPDATE Lists SET Message = ?, Name = ?, Ordinal = ? WHERE Lists.Name = ? AND Lists.Ordinal =?;";
-	private final String checkOrdinal = "Select * FROM Lists WHERE Lists.Name = ? AND Ordinal = ?;";
+	private final String checkOrdinal = "Select Count(*) FROM Lists WHERE Lists.Name = ? AND Ordinal = ?;";
 	private final String addListCommand = "INSERT INTO ComplexFunctions(Command, Function) VALUES(?,?);";
 	
 	private final String setupAccess="CREATE TABLE Access (Description CHAR PRIMARY KEY UNIQUE NOT NULL);";
@@ -57,8 +57,8 @@ public class Dao {
 	private final String setupComplexFunctions="CREATE TABLE ComplexFunctions (Command  STRING PRIMARY KEY UNIQUE, Function NOT NULL);";
 	private final String setupCounters = "CREATE TABLE Counters (Name  STRING  NOT NULL REFERENCES Commands (Name) UNIQUE, Value INTEGER);";
 	private final String setupLists = "CREATE TABLE Lists (Name STRING REFERENCES Commands (Name) NOT NULL, Ordinal INT    NOT NULL, Message STRING NOT NULL);";
-	private final String setupUsers = "CREATE TABLE Users (ID INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE, AccessLevel REFERENCES Access (Description), Name CHAR NOT NULL);";
-	private final String setupUIElements= "CREATE TABLE UIElements ( Name STRING, Text STRING, Profile STRING REFERENCES UIProfile (Name), Command CHAR REFERENCES Commands (Name), Icon STRING, FontFamily STRING, FontStyle INTEGER, FontSize INTEGER, Active INTEGER, XPosition INTEGER, YPosition INTEGER, ZPosition INTEGER, TextColor INTEGER, BackgroundColor INTEGER);";
+	private final String setupUsers = "CREATE TABLE Users (ID INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE, AccessLevel REFERENCES Access (Description), Name CHAR NOT NULL UNIQUE);";
+	private final String setupUIElements= "CREATE TABLE UIElements ( ID INTEGER PRIMARY KEY AUTOINCREMENT, Name STRING, Text STRING, Profile STRING REFERENCES UIProfile (Name), Command CHAR REFERENCES Commands (Name), Icon STRING, FontFamily STRING, FontStyle INTEGER, FontSize INTEGER, Active INTEGER, XPosition INTEGER, YPosition INTEGER, ZPosition INTEGER, Height INTEGER, Width INTEGER, Visible BOOLEAN, SecondsActive INTEGER, BackgroundColor INTEGER, TextColor INTEGER);";
 	private final String setupUIProfile = "CREATE TABLE UIProfile (Name STRING PRIMARY KEY NOT NULL UNIQUE, Height INTEGER NOT NULL, Width INTEGER NOT NULL, Background INTEGER);";
 	private final String setupGeneralTable = "CREATE TABLE General (Keys  STRING, Value STRING);";
 	
@@ -72,9 +72,16 @@ public class Dao {
 	private final String deleteListItem = "DELETE FROM Lists where Ordinal = ? and Name = ?";
 	private final String updateUser = "UPDATE Users SET AccessLevel = ?,  Name = ? WHERE Name = ?;";
 	
-	private final String selectUIElement ="SELECT * FROM UIElements WHERE ID = ?;";
-	private final String selectAllUIElementsByProfile = "SELECT UIElements.*,Commands.Name as MessageName,message,accessLevel,Category,Value FROM UIElements JOIN Commands on Commands.Name = UIElements.Command JOIN Counters ON UIElements.Command = Counters.Name WHERE Profile = ?;";
-	private final String addUIElement = "INSERT INTO UIElements (Name, Text , Profile, Command, Icon, FontFamily, FontStyle, FontSize, Active, XPosition, YPosition, ZPosition, TextColor, BackgroundColor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+	private final String selectUIElement ="SELECT UIElements.*, Commands.Name as MessageName, Commands.* FROM UIElements JOIN Commands on UIElements.Command=Commands.Name WHERE ID = ?;";
+	private final String selectAllUIElementsByProfile = "SELECT UIElements.*,Commands.Name as MessageName,message,accessLevel,Category,Value,Height,Width FROM UIElements JOIN Commands on Commands.Name = UIElements.Command JOIN Counters ON UIElements.Command = Counters.Name WHERE Profile = ?;";
+	private final String addUIElement = "INSERT INTO UIElements (Name, Text , Profile, Command, Icon, FontFamily, FontStyle, FontSize, Active, XPosition, YPosition, ZPosition, TextColor, BackgroundColor, Height, Width,SecondsActive) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+	private final String selectUIElementByName ="SELECT * from UIElements where Name = ? AND Profile = ?";
+	private final String updateUIElementHeight="UPDATE UIElements SET Height = ? where ID =?";
+	private final String updateUIElementWidth ="UPDATE UIElements SET Width = ? where ID =?";
+	private final String updateUIElementActive = "UPDATE UIElements SET Active = ? where ID =?";
+	private final String updateUIElementPlacement="UPDATE UIElements SET XPosition = ?, YPosition =? where ID =?";
+	private final String deleteUIElementByName = "DELETE FROM UIElements where ID = ?";
+
 	private final String removeUIElementByProfile ="Delete from UIElements where Profile = ?";
 	private final String selectAllProfileNames = "SELECT Name from UIProfile;";
 	private final String selectAllProfiles = "SELECT * from UIProfile;";
@@ -155,6 +162,7 @@ public class Dao {
 	}
 
 	public User[] getUsers() {
+		User[] returnUesrs = new User[0]; 
 		try {
 			Connection conn = DriverManager.getConnection(URL);
 			Statement stmt = conn.createStatement();
@@ -172,12 +180,12 @@ public class Dao {
 			rs.close();
 			stmt.close();
 			conn.close();
-			return users.toArray(new User[users.size()]);
+			returnUesrs = users.toArray(new User[users.size()]);
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return null;
+		return returnUesrs;
 	}
 	
 	public boolean deleteMsg (String message) {
@@ -231,7 +239,9 @@ public class Dao {
 			pstmt.setString(1, commandName);
 			pstmt.setInt(2, ordinal);
 			ResultSet rs = pstmt.executeQuery();
-			returnVal = rs.getFetchSize() > 0;
+			int rowCount = rs.getInt("Count(*)");
+	
+			returnVal = rowCount > 0;
 			rs.close();
 			pstmt.close();
 			conn.close();
@@ -267,6 +277,34 @@ public class Dao {
 		return returnStrings;
 
 	}
+	public String [] getCommands(Category cat) {
+		//	private final String getCommands = "SELECT DISTINCT Commands.Name FROM Commands;";
+		String[] returnStrings = null;
+		try {
+			Connection conn = DriverManager.getConnection(URL);
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(getCommands);
+			Vector<String> listNames= new Vector<String>(1);
+			
+			while(rs.next())
+			{
+				if (rs.getString("Category").equals(cat.getDescription())) {
+					listNames.add(rs.getString("Name"));
+				}
+			}
+			rs.close();
+			stmt.close();
+			conn.close();
+			returnStrings = listNames.toArray(new String[listNames.size()]);
+			
+			
+		} catch(SQLException e) {
+			e.printStackTrace();
+		}
+		return returnStrings;
+
+	}
+
 	public String[] getListNames()
 	{
 		String[] returnStrings = null;
@@ -376,26 +414,52 @@ public class Dao {
 		return returnValue;
 
 	}
-	
+	public boolean addUser(String name, Access access) {
+		boolean returnValue = false;
+		if (getUser(name)==null)
+		{
+			try {
+				Connection conn = DriverManager.getConnection(URL);
+				PreparedStatement ps = conn.prepareStatement(addUser);
+				ps.setString(2, name);
+				ps.setString(1, access.getDescription());
+				ps.executeUpdate();
+				
+				ps.close();
+				conn.close();
+				returnValue= true;
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return returnValue;
+	}
+
 	public User getUser(String searchName) {
+		User returnValue = null;
 		try {
 			Connection conn = DriverManager.getConnection(URL);
 			PreparedStatement pstmt = conn.prepareStatement(sqlSpecificUser);
 			pstmt.setString(1, searchName);
 			ResultSet rs = pstmt.executeQuery();
+			if(rs.next()) {
 
-			int id = rs.getInt("ID");
-			Access accessLevel = Access.valueOf(Access.class, rs.getString("AccessLevel"));
-			String name = rs.getString("Name");
+				int id = rs.getInt("ID");
+				Access accessLevel = Access.valueOf(Access.class, rs.getString("AccessLevel"));
+				String name = rs.getString("Name");
+
+				returnValue= new User(name, id, accessLevel);
+			}
 			rs.close();
 			pstmt.close();
 			conn.close();
-			return new User(name, id, accessLevel);
+
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return null;
+
+		return returnValue;
 	}
 
 	public ListMessage[] getListMessages(String listName) {
@@ -655,10 +719,7 @@ public class Dao {
 			PreparedStatement pstmt = conn.prepareStatement(getCounterValue);
 			pstmt.setString(1, Command);
 			ResultSet rs = pstmt.executeQuery();
-			
-			if (rs.getFetchSize() > -1) {
-				 returnValue = rs.getInt("Value");
-			}
+			returnValue = rs.getInt("Value");
 			rs.close();
 			pstmt.close();
 			conn.close();
@@ -676,10 +737,7 @@ public class Dao {
 			PreparedStatement pstmt = conn.prepareStatement(getComplexFunction);
 			pstmt.setString(1, Command);
 			ResultSet rs = pstmt.executeQuery();
-			
-			if (rs.getFetchSize() > -1) {
-				functionName = rs.getString("Function");
-			}
+			functionName = rs.getString("Function");
 			rs.close();
 			pstmt.close();
 			conn.close();
@@ -698,14 +756,12 @@ public class Dao {
 			PreparedStatement pstmt = conn.prepareStatement(getMessageFromCommand);
 			pstmt.setString(1, command);
 			ResultSet rs = pstmt.executeQuery();
+			message.setName(rs.getString("Name"));
+			message.setText(rs.getString("Message"));
+			message.setCategory(Category.valueOf(Category.class, rs.getString("Category")));
+			message.setAccessLevel(rs.getString("AccessLevel") == null ? Access.General
+					: Access.valueOf(Access.class, rs.getString("AccessLevel")));
 
-			if (rs.getFetchSize() > -1) {
-				message.setName(rs.getString("Name"));
-				message.setText(rs.getString("Message"));
-				message.setCategory(Category.valueOf(Category.class, rs.getString("Category")));
-				message.setAccessLevel(rs.getString("AccessLevel") == null ? Access.General
-						: Access.valueOf(Access.class, rs.getString("AccessLevel")));
-			}
 			rs.close();
 			pstmt.close();
 			conn.close();
@@ -725,7 +781,11 @@ public class Dao {
 			PreparedStatement pstmt;
 			pstmt = conn.prepareStatement(checkStatusOfDatabase);
 			ResultSet rs = pstmt.executeQuery();
-			returnValue = rs.getFetchSize() == 0;
+			int rowCount = 0;
+			while(rs.next())
+				rowCount++;
+			
+			returnValue = rowCount == 1;
 			
 			rs.close();
 			pstmt.close();
@@ -735,41 +795,19 @@ public class Dao {
 		}
 		return returnValue;
 	}
-	public boolean addUser(String name, Access access) {
-		boolean returnValue = false;
-		if (getUser(name)==null)
-		{
-			try {
-				Connection conn = DriverManager.getConnection(URL);
-				PreparedStatement ps = conn.prepareStatement(addUser);
-				ps.setString(2, name);
-				ps.setString(1, access.getDescription());
-				ps.executeUpdate();
-				
-				ps.close();
-				conn.close();
-				returnValue= true;
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-		return returnValue;
-	}
 	public Vector<StreamUIProfile> getAllUIProfiles(){
 		Vector<StreamUIProfile> returnList = new Vector<StreamUIProfile>();
 		try {
 			Connection conn = DriverManager.getConnection(URL);
 			PreparedStatement ps = conn.prepareStatement(selectAllProfiles);
 			ResultSet rs = ps.executeQuery();
-			if (rs.getFetchSize() > -1) {
-				while(rs.next()) {
-					StreamUIProfile prof = new StreamUIProfile();
-					prof.setBackGroundColor(new Color(rs.getInt("Background")));
-					prof.setHeight(rs.getInt("Height"));
-					prof.setName(rs.getString("Name"));
-					prof.setWidth(rs.getInt("Width"));
-					returnList.add(prof);
-				}
+			while(rs.next()) {
+				StreamUIProfile prof = new StreamUIProfile();
+				prof.setBackGroundColor(new Color(rs.getInt("Background")));
+				prof.setHeight(rs.getInt("Height"));
+				prof.setName(rs.getString("Name"));
+				prof.setWidth(rs.getInt("Width"));
+				returnList.add(prof);
 			}
 			rs.close();
 			ps.close();
@@ -786,10 +824,8 @@ public class Dao {
 			Connection conn = DriverManager.getConnection(URL);
 			PreparedStatement ps = conn.prepareStatement(selectAllProfileNames);
 			ResultSet rs = ps.executeQuery();
-			if (rs.getFetchSize() > -1) {
-				while(rs.next()) {
-					returnList.add(rs.getString("Name"));
-				}
+			while(rs.next()) {
+				returnList.add(rs.getString("Name"));
 			}
 			rs.close();
 			ps.close();
@@ -824,36 +860,40 @@ public class Dao {
 	}
 	
 
-	public StreamUIElement getUIElementByID(String ID) {
+	public StreamUIElement getUIElementByID(int ID) {
 		StreamUIElement item = new StreamUIElement();
 		try {
 			Connection conn = DriverManager.getConnection(URL);
 			PreparedStatement ps = conn.prepareStatement(selectUIElement);
-			ps.setString(1, ID);
+			ps.setInt(1, ID);
 			ResultSet rs = ps.executeQuery();
-			if (rs.getFetchSize() > -1) {
-				item.setName(rs.getString("Name"));
-				item.setText(rs.getString("Text"));
-				item.setProfile(rs.getString("Profile"));
-				item.setIcon(rs.getString("Icon"));
-				item.setFont(new Font(rs.getString("FontFamily"),rs.getInt("FontStyle"),rs.getInt("FontSize")));
-				item.setActive((rs.getInt("Active")==1));
-				item.setXPosition(rs.getInt("XPosition"));
-				item.setYPosition(rs.getInt("YPosition"));
-				item.setZPosition(rs.getInt("ZPosition"));
-				item.setTextColor(new Color(rs.getInt("TextColor")));
-				item.setBackgroundColor(new Color(rs.getInt("BackgroundColor")));
+
+			item.setId(rs.getInt("ID"));
+			item.setName(rs.getString("Name"));
+			item.setText(rs.getString("Text"));
+			item.setProfile(rs.getString("Profile"));
+			item.setIcon(rs.getString("Icon"));
+			item.setFont(new Font(rs.getString("FontFamily"),rs.getInt("FontStyle"),rs.getInt("FontSize")));
+			item.setActive((rs.getInt("Active")==1));
+			item.setXPosition(rs.getInt("XPosition"));
+			item.setYPosition(rs.getInt("YPosition"));
+			item.setZPosition(rs.getInt("ZPosition"));
+			item.setHeight(rs.getInt("Height"));
+			item.setWidth(rs.getInt("Width"));
+			item.setTextColor(new Color(rs.getInt("TextColor")));
+			item.setBackgroundColor(new Color(rs.getInt("BackgroundColor")));
+			item.setVisible(rs.getBoolean("Visible"));
+			item.setDuration(rs.getInt("SecondsActive"));
 				
-				Message message = new Message();
+			Message message = new Message();
 				
-				message.setName(rs.getString("MessageName"));
-				message.setText(rs.getString("Message"));
-				message.setCategory(Category.valueOf(Category.class, rs.getString("Category")));
-				message.setAccessLevel(rs.getString("AccessLevel") == null ? Access.General
-						: Access.valueOf(Access.class, rs.getString("AccessLevel")));
-				item.setCommand(message);
-				
-			} 
+			message.setName(rs.getString("MessageName"));
+			message.setText(rs.getString("Message"));
+			message.setCategory(Category.valueOf(Category.class, rs.getString("Category")));
+			message.setAccessLevel(rs.getString("AccessLevel") == null ? Access.General
+					: Access.valueOf(Access.class, rs.getString("AccessLevel")));
+			item.setCommand(message);
+ 
 			rs.close();
 			ps.close();
 			conn.close();
@@ -893,7 +933,8 @@ public class Dao {
 			while(rs.next()) {
 				//Text = ?, Profile = ?, Command = ?, Icon = ?, FontFamily = ?, FontStyle = ?, FontSize = ?, Active = ?, XPosition = ?, YPosition = ?, ZPosition = ? where ID = ?;";
 				StreamUIElement item = new StreamUIElement();
-
+				
+				item.setId(rs.getInt("ID"));
 				item.setName(rs.getString("Name"));
 				item.setText(rs.getString("Text"));
 				item.setProfile(rs.getString("Profile"));
@@ -903,8 +944,11 @@ public class Dao {
 				item.setXPosition(rs.getInt("XPosition"));
 				item.setYPosition(rs.getInt("YPosition"));
 				item.setZPosition(rs.getInt("ZPosition"));
+				item.setHeight(rs.getInt("Height"));
+				item.setWidth(rs.getInt("Width"));
 				item.setTextColor(new Color(rs.getInt("TextColor")));
 				item.setBackgroundColor(new Color(rs.getInt("BackgroundColor")));
+				item.setDuration(rs.getInt("SecondsActive"));
 				
 				Message message = new Message();
 				
@@ -946,9 +990,26 @@ public class Dao {
 		return returnValue;
 	}
 	public boolean addUIElement(StreamUIElement item) {
-//		private final String addUIElement = "INSERT INTO UIElements (Name, Text , Profile, Command, Icon, FontFamily, FontStyle, FontSize, Active, XPosition, YPosition, ZPosition, TextColor, BackgroundColor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
-		boolean returnValue = false;
-		
+/*		private final String addUIElement = "INSERT INTO UIElements (
+ * 1-Name, 
+ * 2-Text , 
+ * 3-Profile, 
+ * 4-Command, 
+ * 5-Icon, 
+ * 6-FontFamily, 
+ * 7-FontStyle, 
+ * 8-FontSize, 
+ * 9-Active, 
+ * 10-XPosition,
+ * 11-YPosition, 
+ * 12-ZPosition, 
+ * 13-TextColor, 
+ * 14-BackgroundColor, 
+ * 15-Height, 
+ * 16-Width,
+ * 17-SecondsActive) VALUES (?????????????????);";		boolean returnValue = false;
+*/	
+		boolean returnValue=false;
 		try {
 			Connection conn = DriverManager.getConnection(URL);
 			PreparedStatement ps = conn.prepareStatement(addUIElement);
@@ -966,6 +1027,9 @@ public class Dao {
 			ps.setInt(12, item.getZPosition());
 			ps.setInt(13, item.getTextColor().getRGB());
 			ps.setInt(14, item.getBackgroundColor().getRGB());
+			ps.setInt(15, item.getHeight());
+			ps.setInt(16, item.getWidth());
+			ps.setInt(17, item.getDuration());
 			ps.executeUpdate();
 			ps.close();
 			conn.close();
@@ -987,6 +1051,8 @@ public class Dao {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		System.out.println("updated to 1.0.0");
+
 	}
 	
 	public boolean updateVersionNumber(String VersionNumber) {
@@ -1015,9 +1081,7 @@ public class Dao {
 			Connection conn = DriverManager.getConnection(URL);
 			PreparedStatement pstmt = conn.prepareStatement(getVersionNumber);
 			ResultSet rs = pstmt.executeQuery();
-			if (rs.getFetchSize() > -1) {
-				returnValue = rs.getString("Value");
-			}
+			returnValue = rs.getString("Value");
 			rs.close();
 			pstmt.close();
 			conn.close();
@@ -1028,11 +1092,136 @@ public class Dao {
 		
 		return returnValue;
 	}
+	public boolean deleteUIElement(int ID) {
+		boolean returnValue=false;
+		try {
+			Connection con = DriverManager.getConnection(URL);
+			PreparedStatement ps = con.prepareStatement(deleteUIElementByName);
+			ps.setInt(1, ID);
+			ps.executeUpdate();
+			con.close();
+			returnValue=true;
+		}catch(SQLException exc) {
+			exc.printStackTrace();
+			returnValue=false;
+		}
+		return returnValue;
+	}
+	public boolean updateUIElementLocation(int ID, int x,int y) {
+		boolean returnValue = false;
+		try {
+			Connection con = DriverManager.getConnection(URL);
+			PreparedStatement ps = con.prepareStatement(updateUIElementPlacement);
+			
+			ps.setInt(1, x);
+			ps.setInt(2, y);
+			ps.setInt(3, ID);
+			ps.executeUpdate();
+			con.close();
+			returnValue =true;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			returnValue =false;
+		}
+		return returnValue;
+	}
+	public boolean updateUIElementActive(int ID, boolean active) {
+		boolean returnValue = false;
+		try {
+			Connection con = DriverManager.getConnection(URL);
+			PreparedStatement ps = con.prepareStatement(updateUIElementActive);
+			
+			ps.setBoolean(1, active);
+			ps.setInt(2, ID);
+			ps.executeUpdate();
+			con.close();
+			returnValue =true;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			returnValue =false;
+		}
+		return returnValue;
+	}
+	public StreamUIElement getUIElementByName(String name, String profile) {
+		StreamUIElement returnValue= new StreamUIElement();
+		
+		try {
+			Connection con = DriverManager.getConnection(URL);
+			PreparedStatement ps = con.prepareStatement(selectUIElementByName);
+			ps.setString(1,name);
+			ps.setString(2, profile);
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()) {
+				returnValue.setId(rs.getInt("ID"));
+				returnValue.setName(rs.getString("Name"));
+				returnValue.setText(rs.getString("Text"));
+				returnValue.setProfile(rs.getString("Profile"));
+				returnValue.setIcon(rs.getString("Icon"));
+				returnValue.setFont(new Font(rs.getString("FontFamily"),rs.getInt("FontStyle"),rs.getInt("FontSize")));
+				returnValue.setActive((rs.getInt("Active")==1));
+				returnValue.setXPosition(rs.getInt("XPosition"));
+				returnValue.setYPosition(rs.getInt("YPosition"));
+				returnValue.setZPosition(rs.getInt("ZPosition"));
+				returnValue.setTextColor(new Color(rs.getInt("TextColor")));
+				returnValue.setBackgroundColor(new Color(rs.getInt("BackgroundColor")));
+			}
+
+			rs.close();
+			ps.close();
+			con.close();
+		}
+		catch(SQLException exc) {
+			exc.printStackTrace();
+		}
+		return returnValue;
+	}
 	
+	public boolean updateUIElementDimention(int ID, int width, int height) {
+		StreamUIElement item = getUIElementByID(ID);
+		/*	private final String updateUIElementHeight="UPDATE UIElements SET Height = ? where ID =?";
+	private final String updateUIElementWidth ="UPDATE UIElements SET Width = ? where ID =?"; 
+*/
+		boolean returnValue = true;
+		if (width!= item.getWidth()) {
+			try {
+				Connection con = DriverManager.getConnection(URL);
+				PreparedStatement ps = con.prepareStatement(updateUIElementHeight);
+				ps.setInt(1, width);
+				ps.setInt(2, item.getId());
+				ps.executeUpdate();
+				con.close();
+				returnValue =true;
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				returnValue =false;
+			}
+		}
+		if (height!= item.getHeight()) {
+			try {
+				Connection con = DriverManager.getConnection(URL);
+				PreparedStatement ps = con.prepareStatement(updateUIElementWidth);
+				ps.setInt(1, height);
+				ps.setInt(2, item.getId());
+				ps.executeUpdate();
+				con.close();
+				returnValue =true;
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				returnValue =false;
+			}
+		}
+		
+		return returnValue;
+	}
 	public String getLatestVersion() {
 		return ""+getClass().getPackage().getImplementationVersion();
 	}
 	public void performConvert() {
+		System.out.println("Current version of database: "+getVersionNumber()+"\tMost current version is: "+getLatestVersion());
 		switch(getVersionNumber()) {
 			case "none":
 			case "0.0.2":
@@ -1040,9 +1229,39 @@ public class Dao {
 			case "1.0.0":
 			case "1.0.1":
 			case "1.0.2":
+				UIUpdatePatch();
+				
 				updateVersionNumber(getLatestVersion());
 				break;
 		}
+	}
+	public void UIUpdatePatch()	{
+		
+		String[] updateUI= new String[] {
+			"PRAGMA foreign_keys = 0;CREATE TABLE sqlitestudio_temp_table AS SELECT * FROM UIElements;DROP TABLE UIElements;CREATE TABLE UIElements ( ID INTEGER PRIMARY KEY AUTOINCREMENT, Name STRING, Text STRING, Profile STRING REFERENCES UIProfile (Name), Command CHAR REFERENCES Commands (Name), Icon STRING, FontFamily STRING, FontStyle INTEGER, FontSize INTEGER, Active INTEGER, XPosition INTEGER, YPosition INTEGER, ZPosition INTEGER, Height INTEGER, Width INTEGER, Visible BOOLEAN, SecondsActive INTEGER, BackgroundColor INTEGER, TextColor INTEGER);INSERT INTO UIElements ( Name, Text, Profile, Command, Icon, FontFamily, FontStyle, FontSize, Active, XPosition, YPosition, ZPosition, BackgroundColor, TextColor ) SELECT Name, Text, Profile, Command, Icon, FontFamily, FontStyle, FontSize, Active, XPosition, YPosition, ZPosition, BackgroundColor, TextColor FROM sqlitestudio_temp_table;DROP TABLE sqlitestudio_temp_table;PRAGMA foreign_keys = 1;",
+			"PRAGMA foreign_keys = 0;CREATE TABLE sqlitestudio_temp_table AS SELECT * FROM Users;DROP TABLE Users;CREATE TABLE Users (ID INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE, AccessLevel REFERENCES Access (Description), Name CHAR NOT NULL UNIQUE);INSERT INTO Users ( ID, AccessLevel, Name ) SELECT ID, AccessLevel, Name FROM sqlitestudio_temp_table;DROP TABLE sqlitestudio_temp_table;PRAGMA foreign_keys = 1;"	
+		};
+	
+		try {
+			for(String querie: updateUI)
+			{
+				Connection con = DriverManager.getConnection(URL);
+				for(String command: querie.split(";"))
+				{
+					con.prepareStatement(command).executeUpdate();
+				}
+				
+				con.close();
+			}
+			
+			System.out.println("updated to 1.0.3");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.err.println("error updating database");
+		}
+		
+		
 	}
 
 	public void setupDatabase() {

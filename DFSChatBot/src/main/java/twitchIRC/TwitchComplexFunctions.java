@@ -56,8 +56,8 @@ public class TwitchComplexFunctions {
 		Dao database = new Dao();
 		
 		String msg = event.getMessage().substring(event.getMessage().indexOf(" ")+1).replace("--","-").replace("/*", "*").replace("*/", "*").trim();
-		String command = msg.substring(0, msg.indexOf(" ")).trim();
-		String message = msg.substring(msg.indexOf(" ")).trim();
+		String command = msg.indexOf(" ") ==-1? msg:msg.substring(0, msg.indexOf(" ")).trim();
+		String message = msg.indexOf(" ") ==-1 ?" ": msg.substring(msg.indexOf(" ")).trim();
 		if (msg.contains("-?") || msg.contains("-options") || msg.contains("-usage"))
 		{
 			returnMessage="-usage: "+prefix+"addcom command_name response text";
@@ -115,8 +115,8 @@ public class TwitchComplexFunctions {
 		Dao database = new Dao();
 
 		String msg = event.getMessage().substring(event.getMessage().indexOf(" ")+1).replace("--","-").replace("/*", "*").replace("*/", "*").trim();
-		String command = msg.substring(0, msg.indexOf(" ")).trim();
-		String message = msg.substring(msg.indexOf(" ")).trim();
+		String command = msg.indexOf(" ") ==-1? msg: msg.substring(0, msg.indexOf(" ")).trim();
+		String message = msg.indexOf(" ") ==-1? " ": msg.substring(msg.indexOf(" ")).trim();
 		
 		if (msg.contains("-?") || msg.contains("-options") || msg.contains("-usage")|| command.equals(""))
 		{
@@ -140,8 +140,8 @@ public class TwitchComplexFunctions {
 //!addcounter giggle times you've made made me giggle: #
 
 		String msg = event.getMessage().substring(event.getMessage().indexOf(" ")+1).replace("--","-").replace("/*", "*").replace("*/", "*").trim();
-		String command = msg.substring(0, msg.indexOf(" ")).trim();
-		String message = msg.substring(msg.indexOf(" ")).trim();
+		String command = msg.indexOf(" ") ==-1? msg: msg.substring(0, msg.indexOf(" ")).trim();
+		String message = msg.indexOf(" ") ==-1? " ": msg.substring(msg.indexOf(" ")).trim();
 		if (msg.contains("-?") || msg.contains("-options") || msg.contains("-usage")){
 			returnMessage= ("-usage: "+prefix+"addCounter counter_name message with new value:#");
 		}

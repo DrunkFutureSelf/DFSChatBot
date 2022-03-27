@@ -1,4 +1,4 @@
-package userInterface;
+package userInterface.modify;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -25,7 +25,7 @@ public class ModifyListItem extends JFrame{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	ModifyListItem(ListMessage msg){
+	public ModifyListItem(ListMessage msg){
 		FullMessage newmsg = new FullMessage();
 		newmsg.setAccessLevel(msg.getAccessLevel());
 		newmsg.setCommandName(msg.getName());
@@ -35,7 +35,7 @@ public class ModifyListItem extends JFrame{
 		newmsg.setOrdinal(msg.getOrdinal());
 		showScreen(newmsg);
 	}
-	ModifyListItem(Category cat,String listName){
+	public ModifyListItem(Category cat,String listName){
 		FullMessage newmsg = new FullMessage();
 		newmsg.setCommandName(listName);
 		newmsg.setCategory(cat);

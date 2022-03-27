@@ -1,1 +1,3 @@
-/target/
+/target/*
+bot.properties
+test.db
